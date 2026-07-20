@@ -132,9 +132,10 @@ class Anim {
   }
 }
 
-// extra sheet (named free rects)
+// extra sheets (named free rects) — checks extra, then extra2
 function drawSprite(g, name, x, y, flip = false, scale = 1, alpha = 1) {
-  const s = Assets.json.extra.sprites[name];
+  let s = Assets.json.extra.sprites[name], img = Assets.img.extra;
+  if (!s && Assets.json.extra2) { s = Assets.json.extra2.sprites[name]; img = Assets.img.extra2; }
   if (!s) return;
   const [sx, sy, w, h] = s;
   g.save();
@@ -142,11 +143,11 @@ function drawSprite(g, name, x, y, flip = false, scale = 1, alpha = 1) {
   g.translate(Math.round(x), Math.round(y));
   if (flip) g.scale(-1, 1);
   if (scale !== 1) g.scale(scale, scale);
-  g.drawImage(Assets.img.extra, sx, sy, w, h, -(w >> 1), -h, w, h);
+  g.drawImage(img, sx, sy, w, h, -(w >> 1), -h, w, h);
   g.restore();
 }
 function spriteSize(name) {
-  const s = Assets.json.extra.sprites[name];
+  const s = Assets.json.extra.sprites[name] || (Assets.json.extra2 && Assets.json.extra2.sprites[name]);
   return s ? { w: s[2], h: s[3] } : { w: 0, h: 0 };
 }
 
@@ -156,6 +157,12 @@ function drawTile(g, name, x, y) {
   if (!t) return;
   const [c, r, w, h] = t.tile;
   g.drawImage(Assets.img.tiles, c * TILE, r * TILE, w * TILE, h * TILE, x, y, w * TILE, h * TILE);
+}
+// office tileset
+function drawTileO(g, name, x, y) {
+  const t = Assets.json.office && Assets.json.office.tiles[name];
+  if (!t) return;
+  g.drawImage(Assets.img.office, t[0] * TILE, t[1] * TILE, TILE, TILE, x, y, TILE, TILE);
 }
 
 // ---------- text ----------
@@ -343,6 +350,14 @@ const SONGS = {
       { type: 'triangle', vol: 0.32, notes: [[36,2],[48,2],[36,2],[48,2],[41,2],[53,2],[43,2],[55,2]] },
       { type: 'square', vol: 0.10, notes: [[60,2],[64,2],[67,2],[64,2],[69,2],[67,2],[64,2],[60,2], [65,2],[69,2],[72,2],[69,2],[67,2],[64,2],[62,2],[64,2]] },
       { type: 'square', vol: 0.07, notes: [[-1,1],[-1,1],[-1,2],[-1,1],[-1,1],[-1,2]] },
+    ]
+  },
+  stealth: {
+    bpm: 96,
+    ch: [
+      { type: 'triangle', vol: 0.28, notes: [[33,4],[0,2],[36,2],[33,4],[0,2],[40,2],[33,4],[0,2],[36,2],[38,2],[36,2],[33,4]] },
+      { type: 'square', vol: 0.05, notes: [[57,2],[0,6],[60,2],[0,6],[57,2],[0,4],[64,1],[63,1],[0,8]] },
+      { type: 'square', vol: 0.04, notes: [[-1,2],[0,4],[-1,1],[-1,1]] },
     ]
   },
   sad: {

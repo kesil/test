@@ -1,0 +1,102 @@
+{
+ "image": "jimothy_office.png",
+ "tile_size": 16,
+ "tiles": {
+  "carpet_top": [
+   0,
+   0
+  ],
+  "carpet_mid": [
+   1,
+   0
+  ],
+  "cubicle": [
+   2,
+   0
+  ],
+  "cubicle_top": [
+   3,
+   0
+  ],
+  "desk": [
+   4,
+   0
+  ],
+  "desk_papers": [
+   5,
+   0
+  ],
+  "rack_top": [
+   6,
+   0
+  ],
+  "rack_bot": [
+   7,
+   0
+  ],
+  "vend_top": [
+   0,
+   1
+  ],
+  "vend_bot": [
+   1,
+   1
+  ],
+  "monitor": [
+   2,
+   1
+  ],
+  "cooler": [
+   3,
+   1
+  ],
+  "whiteboard": [
+   4,
+   1
+  ],
+  "poster": [
+   5,
+   1
+  ],
+  "window_a": [
+   6,
+   1
+  ],
+  "window_b": [
+   7,
+   1
+  ],
+  "ceil": [
+   0,
+   2
+  ],
+  "ceil_light": [
+   1,
+   2
+  ],
+  "plant": [
+   2,
+   2
+  ],
+  "papers_floor": [
+   3,
+   2
+  ],
+  "elevator_l": [
+   4,
+   2
+  ],
+  "elevator_r": [
+   5,
+   2
+  ],
+  "mug": [
+   6,
+   2
+  ],
+  "cables": [
+   7,
+   2
+  ]
+ }
+}
