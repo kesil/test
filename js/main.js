@@ -21,6 +21,7 @@ loadAll([
   G.titleAnim = new Anim(); G.titleAnim.set('idle');
   G.titleSel = 0;
   G.timerOn = localStorage.getItem('jim_timer') === '1';
+  G.shakeOn = localStorage.getItem('jim_shake') !== '0';
   if (URLQ.get('rush') === '1') { G.unlocked = STAGES.length; startBossRush(); return; }
   if (URLQ.get('plus') === '1') G.plusMode = true;
   const qs = parseInt(URLQ.get('stage'));
@@ -69,6 +70,17 @@ function startStage(idx, skipIntro) {
   }
 }
 
+function startDemo() {
+  G.demo = { t: 0 };
+  G.idleT = 0;
+  startStage(0, true);
+}
+function endDemo() {
+  G.demo = null;
+  G.state = 'title'; G.idleT = 0;
+  Audio2.stop(); Audio2.sfx('ui');
+}
+
 function startBossRush() {
   G.rush = { idx: 0, time: 0 };
   G.plusMode = false;
@@ -94,9 +106,10 @@ function finishStage() {
   G.resultsT = 0;
   Audio2.stop();
   Audio2.sfx('fanfare');
-  const best = parseInt(localStorage.getItem('jim_best_' + id) || '0');
+  const bestKey = G.cfg.daily ? 'jim_daily_' + dailySeed() : 'jim_best_' + id;
+  const best = parseInt(localStorage.getItem(bestKey) || '0');
   G.newBest = G.score > best;
-  if (G.newBest) localStorage.setItem('jim_best_' + id, String(G.score));
+  if (G.newBest) localStorage.setItem(bestKey, String(G.score));
   const tKey = 'jim_time_' + id, tBest = parseInt(localStorage.getItem(tKey) || '0');
   G.newTimeRec = !G.rush && (!tBest || G.timeF < tBest);
   if (G.newTimeRec) localStorage.setItem(tKey, String(G.timeF));
@@ -137,6 +150,7 @@ function startVictory() {
 function update(dt) {
   if (doorCd > 0) doorCd--;
   Audio2.update(dt);
+  if (G.demo && G.state !== 'play' && G.state !== 'title') { endDemo(); Input.post(); return; }
   if (G.hitstop > 0 && G.state === 'play') { G.hitstop--; Input.post(); return; }
   switch (G.state) {
     case 'title': updateTitle(dt); break;
@@ -147,6 +161,11 @@ function update(dt) {
       if (Input.atkP) {
         G.timerOn = !G.timerOn;
         localStorage.setItem('jim_timer', G.timerOn ? '1' : '0');
+        Audio2.sfx('coin');
+      }
+      if (Input.dashP) {
+        G.shakeOn = !G.shakeOn;
+        localStorage.setItem('jim_shake', G.shakeOn ? '1' : '0');
         Audio2.sfx('coin');
       }
       break;
@@ -182,6 +201,9 @@ function updateTitle(dt) {
   Audio2.init();
   G.titleAnim.update('v5a', dt);
   G.titleT = (G.titleT || 0) + 1;
+  G.idleT = (G.idleT || 0) + 1;
+  if (Input.anyP) G.idleT = 0;
+  if (G.idleT > 1100) { startDemo(); return; }
   if (G.titleT % 420 === 400) G.titleAnim.set(G.titleAnim.name === 'idle' ? 'taunt' : 'idle');
   const maxStory = Math.min(G.unlocked, 6);
   const maxSel = (achSet.has('goty') ? 7 : maxStory) - 1;
@@ -201,6 +223,7 @@ function updateTitle(dt) {
     G.rush = null; G.plusMode = false;
     const m = modes[G.titleMode];
     if (m === 'RUSH') startBossRush();
+    else if (m === 'DAILY') startStage(STAGES.findIndex(s => s.daily), true);
     else {
       if (m === 'TRASH+') G.plusMode = true;
       startStage(G.titleSel);
@@ -208,7 +231,7 @@ function updateTitle(dt) {
   }
 }
 function titleModes() {
-  const m = ['STORY'];
+  const m = ['STORY', 'DAILY'];
   if (achSet.has('goty')) { m.push('RUSH'); m.push('TRASH+'); }
   return m;
 }
@@ -231,7 +254,11 @@ function updatePlay(dt) {
   G.timeF++;
   if (G.banner > 0) G.banner--;
   if (G.irisT > 0) G.irisT--;
-  if (Input.startP && !G.p.dead) { G.state = 'pause'; Audio2.sfx('ui'); return; }
+  if (G.demo) {
+    if (Input.anyP) { endDemo(); return; }
+    driveDemo();
+  }
+  if (!G.demo && Input.startP && !G.p.dead) { G.state = 'pause'; Audio2.sfx('ui'); return; }
   if (G.combo.t > 0) { G.combo.t--; if (G.combo.t === 0) G.combo.n = 0; }
   updatePlayer(dt);
   updateEnemies(dt);
@@ -242,6 +269,20 @@ function updatePlay(dt) {
   updateFX(dt);
   updateCamera();
   if (G.gag && !G.gag.alive && G.gag.smashT > 0) G.gag.smashT--;
+}
+
+function driveDemo() {
+  const d = G.demo, p = G.p;
+  d.t++;
+  Input.l = false; Input.r = true; Input.u = false; Input.d = false;
+  // hop over things: jump when blocked or on a rhythm
+  if (d.t % 85 === 20 || (p.onGround && Math.abs(p.vx) < 0.3 && d.t % 20 === 0)) { Input.jumpP = true; Input.jump = true; }
+  else if (d.t % 85 === 40) Input.jump = false;
+  if (d.t % 260 === 100) Input.dashP = true;
+  if (d.t % 320 === 200) Input.atkP = true;
+  if (d.t % 500 === 450) Input.tauntP = true;
+  if (p.dead) Input.jump = false;
+  if (d.t > 1600 || p.x > 170 * 16) endDemo();
 }
 
 function updateWorldLite(dt) {
@@ -875,7 +916,7 @@ function drawPause() {
   txtShadow(cx, 'PAUSED', VW / 2, 90, '#ffd76b', 32, 'center');
   const tip = PAUSE_TIPS[Math.floor((G.pauseSeed = G.pauseSeed || Math.random() * 100)) % PAUSE_TIPS.length];
   wrap(tip, 52).forEach((l, i) => txtShadow(cx, l, VW / 2, 140 + i * 11, '#c8c2da', 8, 'center'));
-  txtShadow(cx, 'JUMP / START: resume · X: speedrun timer ' + (G.timerOn ? 'ON' : 'OFF') + ' · M: mute', VW / 2, 190, '#8f88a8', 8, 'center');
+  txtShadow(cx, 'JUMP: resume · X: timer ' + (G.timerOn ? 'ON' : 'OFF') + ' · C: shake ' + (G.shakeOn ? 'ON' : 'OFF') + ' · M: mute', VW / 2, 190, '#8f88a8', 8, 'center');
   drawActor(cx, 'v5', 'v5a', 'sleep', Math.floor((G.titleT = (G.titleT || 0) + 1) / 30) % 2, VW / 2, 250);
 }
 
@@ -933,6 +974,8 @@ function drawHUD() {
     cx.strokeStyle = 'rgba(255,215,107,.4)'; cx.strokeRect(30.5, VH - h - 25.5, VW - 61, h - 1);
     lines.forEach((l, i) => txtShadow(cx, l, VW / 2, VH - h - 20 + i * 11, '#ffe9b0', 8, 'center'));
   }
+  if (G.demo && Math.floor(G.timeF / 25) % 2 === 0)
+    txtShadow(cx, 'DEMO — PRESS ANY KEY', VW / 2, 130, '#ffe9b0', 16, 'center');
   if (G.banner > 0 && !G.boss) {
     const a = Math.min(1, G.banner / 30);
     cx.globalAlpha = a;
@@ -1032,7 +1075,9 @@ function drawResults() {
   cx.fillStyle = 'rgba(8,6,14,.85)'; cx.fillRect(0, 0, VW, VH);
   cx.fillStyle = '#100c1c'; cx.fillRect(80, 26, VW - 160, 216);
   cx.strokeStyle = 'rgba(255,215,107,.4)'; cx.strokeRect(80.5, 26.5, VW - 161, 215);
-  txtShadow(cx, 'STAGE ' + G.cfg.id + ' CLEAR!', VW / 2, 38, '#ffd76b', 16, 'center');
+  if (G.cfg.daily) {
+    txtShadow(cx, 'DAILY DUMPSTER ' + dailySeed() + ' CLEAR!', VW / 2, 38, '#ffd76b', 16, 'center');
+  } else txtShadow(cx, 'STAGE ' + G.cfg.id + ' CLEAR!', VW / 2, 38, '#ffd76b', 16, 'center');
   const rows = [
     ['TRASH POINTS', String(G.score)],
     ['TIME', Math.floor(G.timeF / 3600) + ':' + String(Math.floor(G.timeF / 60) % 60).padStart(2, '0')],

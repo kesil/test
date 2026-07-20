@@ -60,7 +60,7 @@ function narrOnce(key) {
 }
 function addText(x, y, s, color = '#ffd76b') { G.texts.push({ x, y, s, color, t: 60 }); }
 function addFX(sheet, anim, x, y, flip = false) { G.fx.push({ sheet, anim: (() => { const a = new Anim(); a.set(anim); return a; })(), x, y, flip, t: 0 }); }
-function shake(n) { G.cam.shake = Math.max(G.cam.shake, n); }
+function shake(n) { if (G.shakeOn === false) return; G.cam.shake = Math.max(G.cam.shake, n); }
 function hitstop(n) { G.hitstop = Math.max(G.hitstop, n); }
 function addScore(n, x, y) {
   if (G.plusMode) n *= 2;

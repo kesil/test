@@ -307,6 +307,82 @@ function mapFerry() {
   return L.lines();
 }
 
+// NEW — DAILY DUMPSTER (date-seeded remix alley)
+function dailySeed() {
+  const o = URLQ.get('daily');
+  if (o) return parseInt(o) || 20260720;
+  const d = new Date();
+  return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+}
+function mapDaily() {
+  srand(dailySeed());
+  const L = new Builder(150, 17), G = 14;
+  L.ground(0, 149, G);
+  L.put(3, G - 1, 'J'); L.put(6, G - 1, '1');
+  let x = 9, lastFlag = 0;
+  while (x < 126) {
+    if (x - lastFlag > 34) { L.put(x, G - 1, 'F'); lastFlag = x; x += 2; }
+    switch (rndi(0, 9)) {
+      case 0: { // rat patrol strip
+        const len = rndi(8, 12);
+        L.put(x + 2, G - 1, 'r'); L.put(x + Math.min(len - 2, 6), G - 1, 'r');
+        if (rndi(0, 1)) L.put(x + 4, G - 1, ':');
+        x += len; break;
+      }
+      case 1: { // pit with coin arc (max 4 wide — always jumpable)
+        const w = rndi(2, 4);
+        L.clear(x, G, x + w - 1, 16);
+        L.put(x + (w >> 1), G - 5, ':');
+        x += w + 3; break;
+      }
+      case 2: { // crates + loot box
+        L.put(x, G - 1, 'c'); L.put(x + 1, G - 1, 'x');
+        if (rndi(0, 1)) L.put(x + 1, G - 2, 'c');
+        x += 5; break;
+      }
+      case 3: { // spring + planks + treat
+        L.put(x, G - 1, 'S');
+        L.hrow(x - 1, x + 3, 10, '=');
+        L.put(x + 1, 9, rndi(0, 2) === 0 ? 'k' : ':');
+        x += 7; break;
+      }
+      case 4: { // wire crossing (towers 3 tall = jumpable; learned this the hard way)
+        L.rect(x, 11, x + 1, G - 1, 'B');
+        L.hrow(x + 2, x + 8, 11, 'w');
+        L.put(x + 4, 10, ':'); L.put(x + 6, 10, ':');
+        L.rect(x + 9, 11, x + 10, G - 1, 'B');
+        x += 13; break;
+      }
+      case 5: { // canal dip
+        const w = rndi(4, 6);
+        L.rect(x, G, x + w - 1, 16, '~');
+        L.put(x + 1, 15, ':'); L.put(x + w - 2, 15, rndi(0, 1) ? 'a' : ':');
+        x += w + 2; break;
+      }
+      case 6: // street furniture (hazardous)
+        L.put(x, G - 1, '!'); L.put(x + 3, G - 1, rndi(0, 1) ? 'g' : '!');
+        x += 7; break;
+      case 7: // foraging
+        L.put(x, G - 1, 't'); L.put(x + 2, G - 1, 'Y');
+        x += 5; break;
+      case 8: // air support
+        L.put(x + 2, rndi(7, 9), 's');
+        L.put(x + 2, G - 1, 'a');
+        x += 8; break;
+      case 9: { // ROOMBA (they escaped)
+        L.put(x + 1, G - 1, 'b');
+        if (rndi(0, 2) === 0) L.put(x + 3, G - 1, 'n');
+        x += 7; break;
+      }
+    }
+    if (rndi(0, 3) === 0) L.put(x - 2, G - 1, ':');
+  }
+  L.put(130, G - 1, 'F');
+  L.put(134, G - 1, 'k');
+  L.put(140, G - 1, 'E');
+  return L.lines();
+}
+
 // ------- story scripts -------
 const STORY = {
   intro: [
@@ -514,6 +590,9 @@ const STAGES = [
     intro: 's6intro', outro: 's6outro', signs: {}, boss: 'gary', final: true },
   { id: 7, name: 'FERRY TALE', sub: 'Epilogue: Now Boarding', map: mapFerry, song: 'dawn',
     intro: 's7intro', signs: SIGNS[7], gag: 'orca', epilogue: true, dawn: true },
+  { id: 8, name: 'DAILY DUMPSTER', sub: 'A New Alley Every Day', map: mapDaily, song: 'alley',
+    signs: { 1: "DAILY DUMPSTER: a new alley every day. The city council doesn't know either." },
+    daily: true, epilogue: true },
 ];
 
 function gradeFor(score, deaths) {

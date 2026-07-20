@@ -64,10 +64,22 @@ Touch controls appear automatically on mobile.
    his HP runs out, he declines to die and pivots to **GARY 2.0 (NOW WITH
    AI)**. Then: the Throne of Refuse, disco credits, and your final grade.
 
+**Post-game:**
+- **FERRY TALE** (epilogue) — dawn on the Sound: balloon floating (absorbs
+  exactly one consequence), mast-wire runs, a sky run, and an **orca cameo**
+- **DAILY DUMPSTER** — a date-seeded remix alley, new every day, with its own
+  daily best score
+- **BOSS RUSH** — both middle managers back-to-back against the clock
+- **TRASH+** — NG+: 4 hearts, faster everything, double score
+
 ## Systems
 
+- **Speedrun timers** — per-stage best times (toggle in pause), rush records
+- **14 Trash Trophies** + **15-entry Trashopedia** bestiary (T / C on title)
+- **Attract mode** — idle on the title and Jimothy demos the game himself
+- Settings: speedrun timer + screenshake toggles (in pause), persisted
+
 - **Combo meter** — chain kills for DOUBLE TRASH → TRASHOCALYPSE bonuses
-- **12 Trash Trophies** (persisted) — from NOT A ROBOT to SERIES B SLAYER
 - **TrashCoin** — collect them all; value at every results screen: $0.00
 - **Stealth** — noise wakes security gulls (running, jumping, landing, glass);
   sneaking muffles you
@@ -75,8 +87,9 @@ Touch controls appear automatically on mobile.
 - Hit-stop, screenshake, ghost respawns, iris wipes, pause tips, WebAudio
   chiptunes (7 tracks), stage select + best scores, mobile touch controls
 
-Dev params: `?stage=N` jump to a stage, `?skip=1` skip story, `?god=1`
-invincible sightseeing, `?mute=1`.
+Dev params: `?stage=N` jump to a stage (7 = ferry, 8 = daily), `?skip=1` skip
+story, `?god=1` invincible sightseeing, `?mute=1`, `?rush=1` boss rush,
+`?plus=1` TRASH+, `?daily=YYYYMMDD` a specific daily seed.
 
 ## Code layout
 
@@ -100,6 +113,11 @@ mound; do not violate).
 ## Testing
 
 Headless Playwright playtests drive `window.JIM` (live game state) through
-every stage, boss, gag, and trophy — 28 mechanics checks including the full
-title → victory clear. Serve the folder, open with Chromium, and everything is
-reachable via `?stage=N&skip=1`.
+every stage, boss, gag, and trophy, plus three **red-team passes**: input
+fuzzing on all stages, state-machine abuse (pause spam during crashes,
+mid-rush deaths), exploit probes (paywall bypasses, gravity-flip deaths,
+chase respawn loops), 40-seed structural validation of the daily generator,
+and an autonomous bot that plays the daily level to the exit. Red-teaming
+caught real bugs: unjumpable wire towers, a checkpoint desert, two ferry
+softlocks, and a crown that could drop inside a wall. All suites pass with
+zero page errors.
