@@ -52,7 +52,13 @@ function addText(x, y, s, color = '#ffd76b') { G.texts.push({ x, y, s, color, t:
 function addFX(sheet, anim, x, y, flip = false) { G.fx.push({ sheet, anim: (() => { const a = new Anim(); a.set(anim); return a; })(), x, y, flip, t: 0 }); }
 function shake(n) { G.cam.shake = Math.max(G.cam.shake, n); }
 function hitstop(n) { G.hitstop = Math.max(G.hitstop, n); }
-function addScore(n, x, y) { G.score += n; if (x !== undefined) addText(x, y, '+' + n); }
+function addScore(n, x, y) {
+  if (G.plusMode) n *= 2;
+  G.score += n;
+  if (x !== undefined) addText(x, y, '+' + n);
+}
+// TRASH+ enemy velocity factor
+function EF() { return G.plusMode ? 1.35 : 1; }
 
 // combo
 const COMBO_LINES = { 2: 'DOUBLE TRASH', 3: 'TRIPLE TRASH', 4: 'TRASHTASTIC', 5: 'TRASHOCALYPSE' };
@@ -207,11 +213,12 @@ function spawnItem(item, x, y) {
 // ---------- player ----------
 function makePlayer(x, y) {
   const a = new Anim(); a.set('idle');
+  const hearts = G.plusMode ? 4 : 6;
   return {
     isPlayer: true, x, y, vx: 0, vy: 0, w: 22, h: 34, dir: 1,
     onGround: false, onWire: false, hitWall: 0, dropThrough: false,
     anim: a, sheet: 'v5', atlas: 'v5a',
-    hearts: 6, maxHearts: 6, cans: 3,
+    hearts, maxHearts: hearts, cans: 3, squashT: 0,
     inv: 0, star: 0, chonk: 0, coffeeT: 0, wizardT: 0, castT: 0, eatT: 0, flatT: 0,
     umbrella: false, jetpack: -1, fuel: 0, mecha: false,
     coyote: 0, jbuf: 0, rollT: 0, rollCd: 0, digT: 0, swipeT: 0, throwT: 0, shootCd: 0,
@@ -501,9 +508,13 @@ function updatePlayer(dt) {
   moveBody(p, extraSolids());
   if (!wasGround && p.onGround) {
     Audio2.sfx('land');
+    p.squashT = Math.min(10, 3 + p.vyPrev);
     if (p.vyPrev > 4) { addFX('v5', 'fx_dust', p.x, p.y); noise(p.x, p.y, 90); }
   }
+  if (p.squashT > 0) p.squashT--;
   p.vyPrev = Math.abs(p.vy);
+  // running kicks up dust
+  if (p.onGround && Math.abs(p.vx) > 1.8 && G.timeF % 18 === 0) addFX('v5', 'fx_dust', p.x - p.dir * 12, p.y);
 
   postMovePlayer();
 
@@ -742,8 +753,8 @@ function updateEnemies(dt) {
     if (e.inv > 0) e.inv--;
     switch (e.type) {
       case 'rat': {
-        e.vx = e.vx || 0.6;
-        if (e.fleeT > 0) { e.fleeT--; e.vx = Math.sign(e.x - p.x) * 0.9 || 0.9; }
+        e.vx = e.vx || 0.6 * EF();
+        if (e.fleeT > 0) { e.fleeT--; e.vx = (Math.sign(e.x - p.x) || 1) * 0.9 * EF(); }
         const ahead = e.x + Math.sign(e.vx) * 14;
         if (isSolid(tileAt(ahead, e.y - 6)) || !isSolid(tileAt(ahead, e.y + 4))) e.vx = -e.vx;
         e.x += e.vx;
@@ -762,7 +773,7 @@ function updateEnemies(dt) {
           if (--e.aimT <= 0) {
             const dx = p.x - e.x, dy = (p.y - 14) - e.y;
             const d = Math.hypot(dx, dy) || 1;
-            e.vx = dx / d * 3.4; e.vy = dy / d * 3.4;
+            e.vx = dx / d * 3.4 * EF(); e.vy = dy / d * 3.4 * EF();
             e.mode = 'dive'; e.diveT = 40;
             Audio2.sfx('swipe');
           }
@@ -817,7 +828,7 @@ function updateEnemies(dt) {
       }
       case 'roomba': {
         e.hp = e.hp === undefined ? 1 : e.hp;
-        e.vx = e.vx || 1.5;
+        e.vx = e.vx || 1.5 * EF();
         const ahead = e.x + Math.sign(e.vx) * 14;
         if (isSolid(tileAt(ahead, e.y - 4)) || !isSolid(tileAt(ahead, e.y + 4))) e.vx = -e.vx;
         e.x += e.vx;
@@ -829,7 +840,7 @@ function updateEnemies(dt) {
         if (e.t <= 0) {
           e.t = rndi(300, 420);
           const dir = p.x > e.x ? -1 : 1; // ride across the player's path
-          G.ents.push({ type: 'scooter', x: e.x + dir * -180, y: e.y, vx: dir * 3.0, hp: 1, zone: e.x });
+          G.ents.push({ type: 'scooter', x: e.x + dir * -180, y: e.y, vx: dir * 3.0 * EF(), hp: 1, zone: e.x });
           narrOnce('scooter');
         }
         break;
@@ -857,14 +868,14 @@ function updateEnemies(dt) {
       case 'drone': {
         e.t = (e.t || 0) + 1;
         const dx = p.x - e.x, dy = (p.y - 30) - e.y;
-        e.x += clamp(dx * 0.008, -1.1, 1.1);
-        e.y += clamp(dy * 0.008, -0.9, 0.9) + Math.sin(e.t / 12) * 0.3;
+        e.x += clamp(dx * 0.008, -1.1, 1.1) * EF();
+        e.y += clamp(dy * 0.008, -0.9, 0.9) * EF() + Math.sin(e.t / 12) * 0.3;
         e.dirF = dx < 0;
         break;
       }
       case 'robot': {
         e.hp = e.hp === undefined ? 3 : e.hp;
-        e.vx = e.vx || 0.85;
+        e.vx = e.vx || 0.85 * EF();
         const ahead = e.x + Math.sign(e.vx) * 16;
         if (isSolid(tileAt(ahead, e.y - 8)) || !isSolid(tileAt(ahead, e.y + 4))) e.vx = -e.vx;
         e.x += e.vx;
@@ -1256,7 +1267,7 @@ function updateCaptcha() {
 }
 
 function startChase() {
-  G.chaser = { x: G.p.x - 300, startX: G.p.x - 300, v: 1.55, stopX: (G.cfg.id === 2 ? 194 * TILE : 1e9) };
+  G.chaser = { x: G.p.x - 300, startX: G.p.x - 300, v: 1.55 * EF(), stopX: (G.cfg.id === 2 ? 194 * TILE : 1e9) };
   narrOnce('chase');
   Audio2.sfx('roar');
   Audio2.tempoMul = 1.15;

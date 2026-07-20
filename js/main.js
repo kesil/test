@@ -20,6 +20,9 @@ loadAll([
   G.state = 'title';
   G.titleAnim = new Anim(); G.titleAnim.set('idle');
   G.titleSel = 0;
+  G.timerOn = localStorage.getItem('jim_timer') === '1';
+  if (URLQ.get('rush') === '1') { G.unlocked = STAGES.length; startBossRush(); return; }
+  if (URLQ.get('plus') === '1') G.plusMode = true;
   const qs = parseInt(URLQ.get('stage'));
   if (qs >= 1 && qs <= STAGES.length) {
     G.unlocked = STAGES.length;
@@ -65,6 +68,12 @@ function startStage(idx, skipIntro) {
   }
 }
 
+function startBossRush() {
+  G.rush = { idx: 0, time: 0 };
+  G.plusMode = false;
+  startStage(2, true);   // B.I.N. first, then Gary
+}
+
 function startStory(key, next) {
   G.state = 'story';
   G.story = { script: STORY[key], i: 0, chars: 0, next };
@@ -77,6 +86,8 @@ function finishStage() {
   if (id === 1) award('littleguy');
   if (id === 4 && G.deaths === 0) award('nocrash');
   if (id === 5 && G.stats.wakes <= 1) award('ninja');
+  if (id === 6 && G.plusMode) award('plus');
+  if (G.rush) G.rush.time += G.timeF;
   G.state = 'results';
   G.resultsT = 0;
   Audio2.stop();
@@ -84,10 +95,24 @@ function finishStage() {
   const best = parseInt(localStorage.getItem('jim_best_' + id) || '0');
   G.newBest = G.score > best;
   if (G.newBest) localStorage.setItem('jim_best_' + id, String(G.score));
+  const tKey = 'jim_time_' + id, tBest = parseInt(localStorage.getItem(tKey) || '0');
+  G.newTimeRec = !G.rush && (!tBest || G.timeF < tBest);
+  if (G.newTimeRec) localStorage.setItem(tKey, String(G.timeF));
 }
 
 function afterResults() {
   const cfg = G.cfg;
+  if (G.rush) {
+    if (G.rush.idx === 0) { G.rush.idx = 1; startStage(5, true); }
+    else {
+      award('rush');
+      const rb = parseInt(localStorage.getItem('jim_rushbest') || '0');
+      G.rushNewBest = !rb || G.rush.time < rb;
+      if (G.rushNewBest) localStorage.setItem('jim_rushbest', String(G.rush.time));
+      G.state = 'rushdone'; G.resultsT = 0; Audio2.play('disco');
+    }
+    return;
+  }
   const go = () => {
     if (G.stageIdx + 1 < STAGES.length) startStage(G.stageIdx + 1);
     else startVictory();
@@ -115,6 +140,20 @@ function update(dt) {
     case 'play': updatePlay(dt); break;
     case 'pause':
       if (Input.startP || Input.jumpP) { G.state = 'play'; Audio2.sfx('ui'); }
+      if (Input.atkP) {
+        G.timerOn = !G.timerOn;
+        localStorage.setItem('jim_timer', G.timerOn ? '1' : '0');
+        Audio2.sfx('coin');
+      }
+      break;
+    case 'trophies':
+      if (Input.startP || Input.jumpP || Input.tauntP || Input.atkP) { G.state = 'title'; Audio2.sfx('ui'); }
+      break;
+    case 'rushdone':
+      G.resultsT++;
+      if (G.resultsT > 60 && (Input.jumpP || Input.startP)) {
+        G.rush = null; G.state = 'title'; Audio2.stop(); Audio2.sfx('ui');
+      }
       break;
     case 'captcha': updateCaptcha(); break;
     case 'exit': updateWorldLite(dt); updateExit(dt); updateCamera(); break;
@@ -134,13 +173,31 @@ function updateTitle(dt) {
   G.titleT = (G.titleT || 0) + 1;
   if (G.titleT % 420 === 400) G.titleAnim.set(G.titleAnim.name === 'idle' ? 'taunt' : 'idle');
   const maxSel = Math.min(G.unlocked, STAGES.length) - 1;
+  const modes = titleModes();
+  G.titleMode = clamp(G.titleMode || 0, 0, modes.length - 1);
   if (Input.l && !G._selHeld) { G.titleSel = Math.max(0, G.titleSel - 1); G._selHeld = true; Audio2.sfx('ui'); }
   else if (Input.r && !G._selHeld) { G.titleSel = Math.min(maxSel, G.titleSel + 1); G._selHeld = true; Audio2.sfx('ui'); }
   else if (!Input.l && !Input.r) G._selHeld = false;
+  if ((Input.u || Input.d) && !G._modeHeld) {
+    G.titleMode = (G.titleMode + (Input.d ? 1 : modes.length - 1)) % modes.length;
+    G._modeHeld = true; Audio2.sfx('ui');
+  } else if (!Input.u && !Input.d) G._modeHeld = false;
+  if (Input.tauntP) { G.state = 'trophies'; Audio2.sfx('ui'); return; }
   if (Input.startP || Input.jumpP) {
     Audio2.init(); Audio2.sfx('coin');
-    startStage(G.titleSel);
+    G.rush = null; G.plusMode = false;
+    const m = modes[G.titleMode];
+    if (m === 'RUSH') startBossRush();
+    else {
+      if (m === 'TRASH+') G.plusMode = true;
+      startStage(G.titleSel);
+    }
   }
+}
+function titleModes() {
+  const m = ['STORY'];
+  if (achSet.has('goty')) { m.push('RUSH'); m.push('TRASH+'); }
+  return m;
 }
 
 function updateStory() {
@@ -223,8 +280,14 @@ function render(dt) {
     case 'captcha': drawWorld(); drawCaptcha(); break;
     case 'bsod': drawWorld(); drawBSOD(); break;
     case 'results': drawWorld(); drawResults(); break;
+    case 'trophies': drawTrophies(); break;
+    case 'rushdone': drawRushDone(); break;
     case 'victory': drawVictory(); break;
   }
+}
+function fmtTime(f) {
+  const cs = Math.floor((f % 60) * 100 / 60);
+  return Math.floor(f / 3600) + ':' + String(Math.floor(f / 60) % 60).padStart(2, '0') + '.' + String(cs).padStart(2, '0');
 }
 
 function drawBoot() {
@@ -612,7 +675,14 @@ function drawPlayer() {
     cx.scale(1, -1);
     cx.translate(-Math.round(p.x), -Math.round(p.y));
   }
+  if (p.squashT > 0 && p.onGround) {
+    const k = p.squashT / 10;
+    cx.translate(Math.round(p.x), Math.round(p.y));
+    cx.scale(1 + 0.12 * k, 1 - 0.14 * k);
+    cx.translate(-Math.round(p.x), -Math.round(p.y));
+  }
   drawActor(cx, p.sheet, p.atlas, p.anim.name, p.anim.frame, p.x, p.y, p.dir < 0, scale);
+  if (p.inv > 70 && !p.dead) drawActor(cx, 'v6', 'v6a', 'hitflash', 0, p.x, p.y, p.dir < 0, scale, 0.8);
   cx.restore();
   // wizard hat on his lil head
   if (p.wizardT > 0 && p.castT <= 0 && !p.dead && p.ghostT <= 0) {
@@ -735,7 +805,7 @@ function drawPause() {
   txtShadow(cx, 'PAUSED', VW / 2, 90, '#ffd76b', 32, 'center');
   const tip = PAUSE_TIPS[Math.floor((G.pauseSeed = G.pauseSeed || Math.random() * 100)) % PAUSE_TIPS.length];
   wrap(tip, 52).forEach((l, i) => txtShadow(cx, l, VW / 2, 140 + i * 11, '#c8c2da', 8, 'center'));
-  txtShadow(cx, 'JUMP / START: resume · M: mute', VW / 2, 190, '#8f88a8', 8, 'center');
+  txtShadow(cx, 'JUMP / START: resume · X: speedrun timer ' + (G.timerOn ? 'ON' : 'OFF') + ' · M: mute', VW / 2, 190, '#8f88a8', 8, 'center');
   drawActor(cx, 'v5', 'v5a', 'sleep', Math.floor((G.titleT = (G.titleT || 0) + 1) / 30) % 2, VW / 2, 250);
 }
 
@@ -753,6 +823,15 @@ function drawHUD() {
   drawSprite(cx, 'coin_0', 24, 74);
   txtShadow(cx, 'x' + G.stats.coins, 34, 66, '#ffd76b', 8);
   txtShadow(cx, String(G.score).padStart(6, '0'), VW - 8, 6, '#ffd76b', 8, 'right');
+  if (G.timerOn || G.rush) {
+    txtShadow(cx, fmtTime(G.timeF), 8, 6, '#9be89b', 8);
+    if (G.rush) txtShadow(cx, 'RUSH ' + fmtTime(G.rush.time + G.timeF), 8, 16, '#ff8f6b', 8);
+    else {
+      const tb = parseInt(localStorage.getItem('jim_time_' + G.cfg.id) || '0');
+      if (tb) txtShadow(cx, 'PB ' + fmtTime(tb), 8, 16, '#6b6484', 8);
+    }
+  }
+  if (G.plusMode) txtShadow(cx, 'TRASH+', 8, G.timerOn ? 26 : 6, '#ff8f6b', 8);
   if (G.combo.n >= 2 && G.combo.t > 0) {
     txtShadow(cx, 'COMBO x' + G.combo.n, VW - 8, 18, '#9be89b', 8, 'right');
   }
@@ -819,7 +898,12 @@ function drawTitle() {
     cx.fillRect(sx + i * 26, 226, 20, 14);
     txt(cx, String(i + 1), sx + i * 26 + 10, 229, sel ? '#241a30' : '#cfc8e0', 8, 'center');
   }
-  txtShadow(cx, 'TROPHIES: ' + achSet.size + '/' + Object.keys(ACH).length, 8, 6, '#9be89b', 8);
+  txtShadow(cx, 'TROPHIES: ' + achSet.size + '/' + Object.keys(ACH).length + '  (T: view)', 8, 6, '#9be89b', 8);
+  const modes = titleModes();
+  if (modes.length > 1) {
+    const mstr = modes.map((m, i) => (i === G.titleMode ? '[' + m + ']' : ' ' + m + ' ')).join(' ');
+    txtShadow(cx, '\u25B2\u25BC MODE: ' + mstr, VW / 2, 216, '#96e8e8', 8, 'center');
+  } else if ((G.titleMode | 0) !== 0) G.titleMode = 0;
   txtShadow(cx, 'ARROWS move · Z jump · X attack (▲+X throw, ▼+X pounce) · C roll · T taunt · M mute', VW / 2, 248, '#8f88a8', 8, 'center');
   txtShadow(cx, 'a game about a round boy', VW / 2, 260, '#6b6484', 8, 'center');
 }
@@ -889,6 +973,7 @@ function drawResults() {
     txtShadow(cx, v, VW - 104, 66 + i * 17, '#fff', 8, 'right');
   });
   if (G.newBest) txtShadow(cx, '* NEW PERSONAL TRASH RECORD *', VW / 2, 192, '#9be89b', 8, 'center');
+  if (G.newTimeRec && G.timerOn) txtShadow(cx, '* NEW BEST TIME *', VW / 2, 202, '#96e8e8', 8, 'center');
   if (G.resultsT > 50 && Math.floor(G.resultsT / 20) % 2 === 0)
     txtShadow(cx, 'PRESS JUMP', VW / 2, 214, '#ffe9b0', 8, 'center');
   drawActor(cx, 'v5', 'v5a', 'celebrate', Math.floor(G.resultsT / 9) % 4, VW / 2, 262);
@@ -941,6 +1026,39 @@ function drawVictory() {
   cx.restore();
   if (G.outroT > 240 && Math.floor(G.outroT / 25) % 2 === 0)
     txtShadow(cx, 'START: back to title', VW / 2, VH - 10, '#8f88a8', 8, 'center');
+}
+
+function drawTrophies() {
+  drawTitleBG();
+  cx.fillStyle = 'rgba(8,6,14,.88)'; cx.fillRect(0, 0, VW, VH);
+  txtShadow(cx, 'TRASH TROPHIES  ' + achSet.size + '/' + Object.keys(ACH).length, VW / 2, 10, '#ffd76b', 16, 'center');
+  const keys = Object.keys(ACH);
+  keys.forEach((k, i) => {
+    const col = i % 2, row = Math.floor(i / 2);
+    const x = 24 + col * (VW / 2 - 16), y = 40 + row * 28;
+    const has = achSet.has(k);
+    cx.fillStyle = has ? 'rgba(255,215,107,.12)' : 'rgba(255,255,255,.04)';
+    cx.fillRect(x, y, VW / 2 - 40, 24);
+    if (has) drawSprite(cx, 'crown', x + 12, y + 20);
+    else txtShadow(cx, '?', x + 10, y + 8, '#555066', 8);
+    txtShadow(cx, has ? ACH[k].n : '???', x + 24, y + 3, has ? '#ffe9b0' : '#6b6484', 8);
+    txtShadow(cx, has ? ACH[k].d : 'keep being a raccoon', x + 24, y + 13, has ? '#c8c2da' : '#555066', 8);
+  });
+  txtShadow(cx, 'JUMP: back', VW / 2, VH - 12, '#8f88a8', 8, 'center');
+}
+
+function drawRushDone() {
+  drawTitleBG();
+  cx.fillStyle = 'rgba(8,6,14,.85)'; cx.fillRect(0, 0, VW, VH);
+  txtShadow(cx, 'BOSS RUSH COMPLETE', VW / 2, 60, '#ffd76b', 16, 'center');
+  txtShadow(cx, 'Both middle managers: handled.', VW / 2, 86, '#c8c2da', 8, 'center');
+  txtShadow(cx, 'TOTAL TIME: ' + fmtTime(G.rush ? G.rush.time : 0), VW / 2, 106, '#96e8e8', 16, 'center');
+  const rb = parseInt(localStorage.getItem('jim_rushbest') || '0');
+  if (G.rushNewBest) txtShadow(cx, '* NEW RUSH RECORD *', VW / 2, 128, '#9be89b', 8, 'center');
+  else if (rb) txtShadow(cx, 'BEST: ' + fmtTime(rb), VW / 2, 128, '#8f88a8', 8, 'center');
+  drawActor(cx, 'v5', 'v5a', 'celebrate', Math.floor(G.resultsT / 9) % 4, VW / 2, 200);
+  if (G.resultsT > 60 && Math.floor(G.resultsT / 20) % 2 === 0)
+    txtShadow(cx, 'PRESS JUMP', VW / 2, 232, '#ffe9b0', 8, 'center');
 }
 
 // ---------- main loop ----------

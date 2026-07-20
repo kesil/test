@@ -421,6 +421,8 @@ const ACH = {
   nocrash:  { n: 'NO BRAKES NO PROBLEM', d: 'Cleared the hill without a wipeout' },
   comedian: { n: 'CROWD WORK',         d: 'Taunted 5 times in one stage' },
   combo:    { n: 'TRASHOCALYPSE',      d: 'Landed a 5-hit combo' },
+  rush:     { n: 'MIDDLE MANAGEMENT',  d: 'Cleared Boss Rush' },
+  plus:     { n: 'OVERQUALIFIED',      d: 'Beat the final boss in TRASH+' },
 };
 
 // per-stage config
