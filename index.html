@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>JIMOTHY: TRASH TALES</title>
+<meta name="description" content="A sidescroller about Jimothy, Ballard's roundest raccoon, versus the AI trash-can subscription economy.">
+<meta property="og:title" content="JIMOTHY: TRASH TALES">
+<meta property="og:description" content="One eye. Zero thoughts. Infinite trash. Play free in your browser.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>🦝</text></svg>">
+<style>
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: #16121e; overflow: hidden;
+    touch-action: none; overscroll-behavior: none;
+    -webkit-user-select: none; user-select: none;
+  }
+  #wrap {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  canvas {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    background: #1b1626;
+  }
+  #touch { position: fixed; inset: 0; pointer-events: none; display: none; }
+  .tbtn {
+    position: absolute; pointer-events: auto;
+    width: 64px; height: 64px; border-radius: 50%;
+    background: rgba(255,255,255,.08); border: 2px solid rgba(255,255,255,.25);
+    color: rgba(255,255,255,.65); font: bold 20px monospace;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .tbtn:active, .tbtn.on { background: rgba(255,255,255,.25); }
+  #tL { left: 12px;  bottom: 48px; }
+  #tR { left: 132px; bottom: 48px; }
+  #tU { left: 72px;  bottom: 96px; width: 56px; height: 56px; }
+  #tDn{ left: 72px;  bottom: 8px;  width: 56px; height: 56px; }
+  #tJ { right: 16px; bottom: 64px; }
+  #tA { right: 96px; bottom: 20px; }
+  #tD { right: 176px; bottom: 20px; width: 52px; height: 52px; font-size: 14px; }
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="game" width="480" height="270"></canvas></div>
+<div id="touch">
+  <div class="tbtn" id="tL">&#9664;</div>
+  <div class="tbtn" id="tR">&#9654;</div>
+  <div class="tbtn" id="tU">&#9650;</div>
+  <div class="tbtn" id="tDn">&#9660;</div>
+  <div class="tbtn" id="tJ">A</div>
+  <div class="tbtn" id="tA">B</div>
+  <div class="tbtn" id="tD">roll</div>
+</div>
+<script src="js/core.js"></script>
+<script src="js/world.js"></script>
+<script src="js/game.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

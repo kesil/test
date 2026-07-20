@@ -1,0 +1,314 @@
+{
+  "image": "jimothy_v5_sheet_native.png",
+  "frame_w": 80,
+  "frame_h": 64,
+  "facing": "right",
+  "anchors": {
+    "feet_baseline_y": 58,
+    "body_center": [
+      38,
+      34
+    ],
+    "mouth": [
+      63,
+      38
+    ],
+    "hands": [
+      51,
+      45
+    ],
+    "ledge_grip": [
+      49,
+      11
+    ],
+    "swim_waterline_y": 44,
+    "throw_spawn": [
+      64,
+      28
+    ],
+    "swipe_hit_center": [
+      58,
+      40
+    ]
+  },
+  "hitboxes": {
+    "stand": {
+      "x": 22,
+      "y": 20,
+      "w": 34,
+      "h": 38
+    },
+    "sneak_swim": {
+      "x": 20,
+      "y": 28,
+      "w": 38,
+      "h": 30
+    },
+    "roll": {
+      "x": 24,
+      "y": 26,
+      "w": 30,
+      "h": 30
+    },
+    "ko": {
+      "x": 18,
+      "y": 38,
+      "w": 42,
+      "h": 20
+    }
+  },
+  "animations": {
+    "idle": {
+      "row": 0,
+      "frames": 4,
+      "duration_ms": 220,
+      "loop": true,
+      "note": "default loop"
+    },
+    "bored": {
+      "row": 1,
+      "frames": 4,
+      "duration_ms": 260,
+      "loop": true,
+      "note": "long-idle: scratch + yawn"
+    },
+    "sneak": {
+      "row": 2,
+      "frames": 4,
+      "duration_ms": 180,
+      "loop": true,
+      "note": "crouch-walk"
+    },
+    "walk": {
+      "row": 3,
+      "frames": 6,
+      "duration_ms": 130,
+      "loop": true,
+      "note": ""
+    },
+    "run": {
+      "row": 4,
+      "frames": 6,
+      "duration_ms": 95,
+      "loop": true,
+      "note": "bounding gait"
+    },
+    "skid": {
+      "row": 5,
+      "frames": 2,
+      "duration_ms": 110,
+      "loop": false,
+      "note": "brake from run"
+    },
+    "turn": {
+      "row": 6,
+      "frames": 2,
+      "duration_ms": 90,
+      "loop": false,
+      "note": "flip transition"
+    },
+    "jump": {
+      "row": 7,
+      "frames": 3,
+      "duration_ms": 100,
+      "loop": false,
+      "note": "crouch/rise/apex"
+    },
+    "fall": {
+      "row": 8,
+      "frames": 1,
+      "duration_ms": 120,
+      "loop": true,
+      "note": ""
+    },
+    "land": {
+      "row": 9,
+      "frames": 2,
+      "duration_ms": 120,
+      "loop": false,
+      "note": "squash/recover"
+    },
+    "roll": {
+      "row": 10,
+      "frames": 4,
+      "duration_ms": 80,
+      "loop": true,
+      "note": "ball-dash"
+    },
+    "climb": {
+      "row": 11,
+      "frames": 4,
+      "duration_ms": 160,
+      "loop": true,
+      "note": "wall at right edge"
+    },
+    "swim": {
+      "row": 12,
+      "frames": 4,
+      "duration_ms": 170,
+      "loop": true,
+      "note": "waterline y=44"
+    },
+    "hang": {
+      "row": 13,
+      "frames": 2,
+      "duration_ms": 300,
+      "loop": true,
+      "note": "grip anchor (49,11)"
+    },
+    "push": {
+      "row": 14,
+      "frames": 2,
+      "duration_ms": 200,
+      "loop": true,
+      "note": "object at right edge"
+    },
+    "dig": {
+      "row": 15,
+      "frames": 4,
+      "duration_ms": 150,
+      "loop": true,
+      "note": "forage"
+    },
+    "eat": {
+      "row": 16,
+      "frames": 4,
+      "duration_ms": 200,
+      "loop": false,
+      "note": "consume pickup"
+    },
+    "carry": {
+      "row": 17,
+      "frames": 2,
+      "duration_ms": 260,
+      "loop": true,
+      "note": "item in jaws; mouth anchor"
+    },
+    "throw": {
+      "row": 18,
+      "frames": 3,
+      "duration_ms": 110,
+      "loop": false,
+      "note": "spawn projectile frame 1"
+    },
+    "swipe": {
+      "row": 19,
+      "frames": 3,
+      "duration_ms": 90,
+      "loop": false,
+      "note": "melee; hit frame 1"
+    },
+    "pounce": {
+      "row": 20,
+      "frames": 2,
+      "duration_ms": 140,
+      "loop": false,
+      "note": "lunge attack"
+    },
+    "alert": {
+      "row": 21,
+      "frames": 1,
+      "duration_ms": 400,
+      "loop": false,
+      "note": "enemy spotted"
+    },
+    "scared": {
+      "row": 22,
+      "frames": 2,
+      "duration_ms": 120,
+      "loop": true,
+      "note": "tremble"
+    },
+    "hurt": {
+      "row": 23,
+      "frames": 1,
+      "duration_ms": 200,
+      "loop": false,
+      "note": ""
+    },
+    "ko": {
+      "row": 24,
+      "frames": 2,
+      "duration_ms": 400,
+      "loop": true,
+      "note": "defeat splat"
+    },
+    "celebrate": {
+      "row": 25,
+      "frames": 4,
+      "duration_ms": 150,
+      "loop": true,
+      "note": "level clear"
+    },
+    "taunt": {
+      "row": 26,
+      "frames": 2,
+      "duration_ms": 200,
+      "loop": true,
+      "note": "butt wiggle"
+    },
+    "sleep": {
+      "row": 27,
+      "frames": 2,
+      "duration_ms": 550,
+      "loop": true,
+      "note": ""
+    },
+    "wake": {
+      "row": 28,
+      "frames": 2,
+      "duration_ms": 300,
+      "loop": false,
+      "note": "stretch + yawn"
+    },
+    "trashdive": {
+      "row": 29,
+      "frames": 4,
+      "duration_ms": 160,
+      "loop": true,
+      "note": "SIGNATURE set piece"
+    },
+    "portrait": {
+      "row": 30,
+      "frames": 1,
+      "duration_ms": 0,
+      "loop": false,
+      "note": "HUD face"
+    },
+    "props": {
+      "row": 31,
+      "frames": 2,
+      "duration_ms": 0,
+      "loop": false,
+      "note": "trashcan upright/tipped"
+    },
+    "items": {
+      "row": 32,
+      "frames": 4,
+      "duration_ms": 0,
+      "loop": false,
+      "note": "pizza/fishbone/can/cookie"
+    },
+    "fx_dust": {
+      "row": 33,
+      "frames": 3,
+      "duration_ms": 90,
+      "loop": false,
+      "note": "landing/skid puff"
+    },
+    "fx_sparkle": {
+      "row": 34,
+      "frames": 2,
+      "duration_ms": 120,
+      "loop": true,
+      "note": "pickup shine"
+    },
+    "hearts": {
+      "row": 35,
+      "frames": 3,
+      "duration_ms": 0,
+      "loop": false,
+      "note": "HUD full/half/empty"
+    }
+  }
+}

@@ -1,0 +1,406 @@
+{
+  "image": "jimothy_tiles.png",
+  "tile_size": 16,
+  "cols": 8,
+  "rows": 6,
+  "collision_classes": [
+    "none",
+    "solid",
+    "platform",
+    "hazard",
+    "bounce",
+    "checkpoint",
+    "water",
+    "climb",
+    "door"
+  ],
+  "tiles": {
+    "sky_a": {
+      "tile": [
+        0,
+        0,
+        1,
+        1
+      ],
+      "collision": "none"
+    },
+    "sky_b": {
+      "tile": [
+        1,
+        0,
+        1,
+        1
+      ],
+      "collision": "none"
+    },
+    "cloud_l": {
+      "tile": [
+        2,
+        0,
+        1,
+        1
+      ],
+      "collision": "none"
+    },
+    "cloud_r": {
+      "tile": [
+        3,
+        0,
+        1,
+        1
+      ],
+      "collision": "none"
+    },
+    "skyline_a": {
+      "tile": [
+        4,
+        0,
+        1,
+        1
+      ],
+      "collision": "none"
+    },
+    "skyline_b": {
+      "tile": [
+        5,
+        0,
+        1,
+        1
+      ],
+      "collision": "none"
+    },
+    "space_needle": {
+      "tile": [
+        6,
+        0,
+        1,
+        1
+      ],
+      "collision": "none"
+    },
+    "moon": {
+      "tile": [
+        7,
+        0,
+        1,
+        1
+      ],
+      "collision": "none"
+    },
+    "ground_top": {
+      "tile": [
+        0,
+        1,
+        1,
+        1
+      ],
+      "collision": "solid"
+    },
+    "ground_mid": {
+      "tile": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "collision": "solid"
+    },
+    "ground_top_l": {
+      "tile": [
+        2,
+        1,
+        1,
+        1
+      ],
+      "collision": "solid"
+    },
+    "ground_top_r": {
+      "tile": [
+        3,
+        1,
+        1,
+        1
+      ],
+      "collision": "solid"
+    },
+    "brick": {
+      "tile": [
+        4,
+        1,
+        1,
+        1
+      ],
+      "collision": "solid"
+    },
+    "brick_window": {
+      "tile": [
+        5,
+        1,
+        1,
+        1
+      ],
+      "collision": "solid"
+    },
+    "brick_top": {
+      "tile": [
+        6,
+        1,
+        1,
+        1
+      ],
+      "collision": "solid"
+    },
+    "fence": {
+      "tile": [
+        7,
+        1,
+        1,
+        1
+      ],
+      "collision": "none"
+    },
+    "crate": {
+      "tile": [
+        0,
+        2,
+        1,
+        1
+      ],
+      "collision": "solid"
+    },
+    "box": {
+      "tile": [
+        1,
+        2,
+        1,
+        1
+      ],
+      "collision": "solid"
+    },
+    "spring_idle": {
+      "tile": [
+        2,
+        2,
+        1,
+        1
+      ],
+      "collision": "bounce"
+    },
+    "spring_out": {
+      "tile": [
+        3,
+        2,
+        1,
+        1
+      ],
+      "collision": "bounce"
+    },
+    "flag_a": {
+      "tile": [
+        4,
+        2,
+        1,
+        1
+      ],
+      "collision": "checkpoint"
+    },
+    "flag_b": {
+      "tile": [
+        5,
+        2,
+        1,
+        1
+      ],
+      "collision": "checkpoint"
+    },
+    "puddle": {
+      "tile": [
+        6,
+        2,
+        1,
+        1
+      ],
+      "collision": "none"
+    },
+    "pipe_top": {
+      "tile": [
+        7,
+        2,
+        1,
+        1
+      ],
+      "collision": "solid"
+    },
+    "dumpster": {
+      "tile": [
+        0,
+        3,
+        2,
+        2
+      ],
+      "collision": "solid"
+    },
+    "pipe_mid": {
+      "tile": [
+        2,
+        3,
+        1,
+        1
+      ],
+      "collision": "solid"
+    },
+    "lamp_head": {
+      "tile": [
+        3,
+        3,
+        1,
+        1
+      ],
+      "collision": "none"
+    },
+    "lamp_pole": {
+      "tile": [
+        4,
+        3,
+        1,
+        1
+      ],
+      "collision": "none"
+    },
+    "lamp_base": {
+      "tile": [
+        5,
+        3,
+        1,
+        1
+      ],
+      "collision": "none"
+    },
+    "cone": {
+      "tile": [
+        6,
+        3,
+        1,
+        1
+      ],
+      "collision": "hazard"
+    },
+    "hydrant": {
+      "tile": [
+        7,
+        3,
+        1,
+        1
+      ],
+      "collision": "solid"
+    },
+    "plank_l": {
+      "tile": [
+        0,
+        4,
+        1,
+        1
+      ],
+      "collision": "platform"
+    },
+    "plank_m": {
+      "tile": [
+        1,
+        4,
+        1,
+        1
+      ],
+      "collision": "platform"
+    },
+    "plank_r": {
+      "tile": [
+        2,
+        4,
+        1,
+        1
+      ],
+      "collision": "platform"
+    },
+    "trash_scatter": {
+      "tile": [
+        3,
+        4,
+        1,
+        1
+      ],
+      "collision": "none"
+    },
+    "grate": {
+      "tile": [
+        4,
+        4,
+        1,
+        1
+      ],
+      "collision": "none"
+    },
+    "door": {
+      "tile": [
+        5,
+        4,
+        1,
+        1
+      ],
+      "collision": "door"
+    },
+    "glass_hazard": {
+      "tile": [
+        6,
+        4,
+        1,
+        1
+      ],
+      "collision": "hazard"
+    },
+    "ladder": {
+      "tile": [
+        7,
+        4,
+        1,
+        1
+      ],
+      "collision": "climb"
+    },
+    "water_a": {
+      "tile": [
+        0,
+        5,
+        1,
+        1
+      ],
+      "collision": "water"
+    },
+    "water_b": {
+      "tile": [
+        1,
+        5,
+        1,
+        1
+      ],
+      "collision": "water"
+    },
+    "bush": {
+      "tile": [
+        2,
+        5,
+        1,
+        1
+      ],
+      "collision": "none"
+    },
+    "pole_wire": {
+      "tile": [
+        3,
+        5,
+        1,
+        1
+      ],
+      "collision": "none"
+    }
+  }
+}

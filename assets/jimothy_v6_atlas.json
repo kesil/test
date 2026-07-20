@@ -1,0 +1,240 @@
+{
+  "image": "jimothy_v6_sheet_native.png",
+  "frame_w": 80,
+  "frame_h": 64,
+  "facing": "right",
+  "notes": "Expansion sheet. Shares anatomy/anchors with jimothy_v5_atlas.json.",
+  "animations": {
+    "mecha": {
+      "row": 0,
+      "frames": 4,
+      "duration_ms": 160,
+      "loop": true,
+      "note": "power armor: idle 0-1, hover 2-3"
+    },
+    "wizard": {
+      "row": 1,
+      "frames": 3,
+      "duration_ms": 180,
+      "loop": false,
+      "note": "cast on frame 1"
+    },
+    "ninja_dash": {
+      "row": 2,
+      "frames": 3,
+      "duration_ms": 70,
+      "loop": false,
+      "note": "baked afterimages"
+    },
+    "king": {
+      "row": 3,
+      "frames": 2,
+      "duration_ms": 400,
+      "loop": true,
+      "note": "victory screen set piece"
+    },
+    "ghost": {
+      "row": 4,
+      "frames": 4,
+      "duration_ms": 200,
+      "loop": true,
+      "note": "respawn float"
+    },
+    "chonk": {
+      "row": 5,
+      "frames": 4,
+      "duration_ms": 160,
+      "loop": true,
+      "note": "over-fed powerup bounce"
+    },
+    "star_power": {
+      "row": 6,
+      "frames": 4,
+      "duration_ms": 80,
+      "loop": true,
+      "note": "invincibility gold flash"
+    },
+    "jetpack": {
+      "row": 7,
+      "frames": 4,
+      "duration_ms": 120,
+      "loop": true,
+      "note": "soda-bottle rocket"
+    },
+    "balloon": {
+      "row": 8,
+      "frames": 4,
+      "duration_ms": 240,
+      "loop": true,
+      "note": "slow drift descent"
+    },
+    "umbrella": {
+      "row": 9,
+      "frames": 2,
+      "duration_ms": 280,
+      "loop": true,
+      "note": "glide fall"
+    },
+    "disco": {
+      "row": 10,
+      "frames": 4,
+      "duration_ms": 200,
+      "loop": true,
+      "note": "dance minigame"
+    },
+    "cart_ride": {
+      "row": 11,
+      "frames": 4,
+      "duration_ms": 110,
+      "loop": true,
+      "note": "downhill vehicle"
+    },
+    "zap": {
+      "row": 12,
+      "frames": 2,
+      "duration_ms": 90,
+      "loop": true,
+      "note": "electrocution x-ray"
+    },
+    "frozen": {
+      "row": 13,
+      "frames": 2,
+      "duration_ms": 350,
+      "loop": false,
+      "note": "cracks on frame 1"
+    },
+    "onfire": {
+      "row": 14,
+      "frames": 4,
+      "duration_ms": 90,
+      "loop": true,
+      "note": "panic run w/ flames"
+    },
+    "flat": {
+      "row": 15,
+      "frames": 2,
+      "duration_ms": 220,
+      "loop": true,
+      "note": "steamrolled wobble"
+    },
+    "hitflash": {
+      "row": 16,
+      "frames": 1,
+      "duration_ms": 60,
+      "loop": false,
+      "note": "white damage flash"
+    },
+    "crouch": {
+      "row": 17,
+      "frames": 2,
+      "duration_ms": 300,
+      "loop": true,
+      "note": "duck under things"
+    },
+    "look": {
+      "row": 18,
+      "frames": 2,
+      "duration_ms": 0,
+      "loop": false,
+      "note": "0 up / 1 down (camera peek)"
+    },
+    "walljump": {
+      "row": 19,
+      "frames": 2,
+      "duration_ms": 100,
+      "loop": false,
+      "note": "wall at right edge"
+    },
+    "balance": {
+      "row": 20,
+      "frames": 4,
+      "duration_ms": 220,
+      "loop": true,
+      "note": "tightrope at y=52"
+    },
+    "pickup": {
+      "row": 21,
+      "frames": 2,
+      "duration_ms": 160,
+      "loop": false,
+      "note": "grab ground item"
+    },
+    "inspect": {
+      "row": 22,
+      "frames": 2,
+      "duration_ms": 280,
+      "loop": true,
+      "note": "interact prompt"
+    },
+    "dive": {
+      "row": 23,
+      "frames": 2,
+      "duration_ms": 180,
+      "loop": true,
+      "note": "underwater descent"
+    },
+    "rat": {
+      "row": 24,
+      "frames": 2,
+      "duration_ms": 140,
+      "loop": true,
+      "note": "enemy scurry"
+    },
+    "gull": {
+      "row": 25,
+      "frames": 2,
+      "duration_ms": 140,
+      "loop": true,
+      "note": "flying enemy"
+    },
+    "possum": {
+      "row": 26,
+      "frames": 2,
+      "duration_ms": 180,
+      "loop": true,
+      "note": "npc/rival"
+    },
+    "control": {
+      "row": 27,
+      "frames": 2,
+      "duration_ms": 200,
+      "loop": true,
+      "note": "Animal Control hazard: legs+net"
+    },
+    "emotes": {
+      "row": 28,
+      "frames": 4,
+      "duration_ms": 0,
+      "loop": false,
+      "note": "dialogue: happy/sad/angry/shocked"
+    },
+    "bubbles": {
+      "row": 29,
+      "frames": 4,
+      "duration_ms": 0,
+      "loop": false,
+      "note": "speech: ! ? heart zzz"
+    },
+    "fx_splash": {
+      "row": 30,
+      "frames": 3,
+      "duration_ms": 90,
+      "loop": false,
+      "note": "water entry"
+    },
+    "fx_confetti": {
+      "row": 31,
+      "frames": 2,
+      "duration_ms": 140,
+      "loop": true,
+      "note": "celebration"
+    },
+    "fx_hitspark": {
+      "row": 32,
+      "frames": 2,
+      "duration_ms": 70,
+      "loop": false,
+      "note": "melee impact"
+    }
+  }
+}
