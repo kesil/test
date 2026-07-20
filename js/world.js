@@ -264,6 +264,49 @@ function mapStage6() {
   return L.lines();
 }
 
+// NEW — FERRY TALE (epilogue: dawn on the water)
+function mapFerry() {
+  const L = new Builder(200, 20);
+  L.rect(0, 18, 199, 19, '~');
+  // departure dock
+  L.ground(0, 30, 17);
+  L.put(3, 16, 'J'); L.put(6, 16, '1'); L.put(10, 16, 'o');
+  L.put(14, 16, 'l');                                    // BALLOON
+  L.put(18, 16, 'c'); L.put(19, 16, 'x');
+  L.put(22, 12, 's'); L.put(27, 11, 's');
+  L.put(24, 16, 't');
+  // open water hop
+  L.put(33, 14, ':'); L.put(36, 13, ':');
+  // the ferry itself (boarding ladder on the hull — maritime code, very strict)
+  L.ground(40, 92, 14);
+  L.vcol(40, 14, 17, 'L');
+  L.rect(55, 10, 62, 13, 'B'); L.hrow(56, 61, 11, 'W');
+  L.put(44, 11, 's'); L.put(50, 10, 's'); L.put(48, 13, 'n'); L.put(85, 13, 'n');
+  L.put(43, 13, 't'); L.put(42, 13, '2');
+  L.put(70, 13, 'Q');                                    // ORCA
+  L.hrow(63, 80, 10, 'w'); L.rect(81, 11, 82, 13, 'B');
+  L.put(72, 9, '*'); L.put(66, 9, ':'); L.put(76, 9, ':');
+  L.put(58, 9, ':'); L.put(60, 9, ':');
+  L.put(88, 13, 'F');
+  // aft water + float islands
+  L.hrow(96, 97, 17, '='); L.put(94, 15, ':'); L.put(99, 15, ':'); L.put(101, 15, 'k');
+  // balloon ascent
+  L.rect(105, 15, 107, 17, 'B');
+  L.put(106, 14, 'l');                                   // spare balloon
+  L.put(110, 13, ':'); L.put(114, 10, ':'); L.put(118, 7, ':'); L.put(122, 5, ':'); L.put(126, 4, ':');
+  L.put(112, 8, 'C'); L.put(120, 5, 'C'); L.put(126, 9, 'C'); L.put(116, 6, 's');
+  // sky run
+  L.hrow(132, 135, 5, '='); L.hrow(140, 143, 6, '='); L.hrow(148, 151, 4, '=');
+  L.hrow(156, 159, 6, '='); L.hrow(163, 166, 5, '=');
+  L.put(138, 3, 's'); L.put(154, 3, 's'); L.put(145, 5, 'n');
+  [[134, 4], [142, 5], [150, 3], [158, 5], [165, 4]].forEach(([x, y]) => L.put(x, y, ':'));
+  // upper deck finale
+  L.ground(170, 196, 8);
+  L.put(172, 7, 'F'); L.put(176, 7, '3'); L.put(180, 7, 'o');
+  L.put(184, 7, 'k'); L.put(188, 7, 'E');
+  return L.lines();
+}
+
 // ------- story scripts -------
 const STORY = {
   intro: [
@@ -327,6 +370,11 @@ const STORY = {
     ['gary', "I read your file. 'One eye. Zero thoughts.' Normally we'd make you a VP."],
     ['jim', '...', 'angry'],
     ['narr', 'Behold: the ancient MECHA SUIT of the Dumpster Sages. It smells terrible. It is PERFECT.'],
+  ],
+  s7intro: [
+    ['narr', 'EPILOGUE: FERRY TALE. Dawn. The trash is free. The gulls are... regrouping.'],
+    ['randall', "The 6:20 ferry. I got us tickets. The tickets are leaves. Walk confident."],
+    ['randall', 'Also I got you a balloon. It absorbs exactly one (1) consequence. Spend it wisely.'],
   ],
   s6outro: [
     ['gary', 'fine... take the trash... I am going to found a startup... for bread... pre-seed... my flock believes in me...'],
@@ -397,6 +445,11 @@ const SIGNS = {
     1: "SPEED LIMIT: no.",
     2: "LAST EXIT BEFORE HQ. No refunds. No brakes. No thoughts.",
   },
+  7: {
+    1: "WA STATE FERRIES: now boarding. The boat is emotional support infrastructure.",
+    2: "PLEASE DO NOT FEED THE GULLS. They have equity now. It made everything worse.",
+    3: "UPPER DECK: first class. Defined as 'the same, but windier'.",
+  },
   5: {
     1: "WELCOME TO TRASH DISTRICT HQ. Prove you're not a robot. (The robots couldn't.)",
     2: "DAILY STANDUP IN PROGRESS. It has been in progress since 2019.",
@@ -423,7 +476,27 @@ const ACH = {
   combo:    { n: 'TRASHOCALYPSE',      d: 'Landed a 5-hit combo' },
   rush:     { n: 'MIDDLE MANAGEMENT',  d: 'Cleared Boss Rush' },
   plus:     { n: 'OVERQUALIFIED',      d: 'Beat the final boss in TRASH+' },
+  commuter: { n: 'COMMUTER',           d: 'Rode the ferry. Paid in trash.' },
 };
+
+// ------- TRASHOPEDIA (bestiary) -------
+const PEDIA = [
+  ['rat',      'RAT',            "Ground ops. Unionized in 2019.", "Fully vested. Fully bitter. Surprisingly fast."],
+  ['gull',     'GULL',           "Air superiority division.", "Did one mindfulness retreat. It did not take."],
+  ['sgull',    'SECURITY GULL',  "Sleeps at work. Bills overtime for it.", "Wakes angry, wakes loud, wakes EVERYONE."],
+  ['crow',     'CROW',           "CFO of the sky.", "Remembers your face, your cans, and your outstanding balance."],
+  ['roomba',   'ROOMBA',        "Vacuum-shaped surveillance.", "Your floor plan is on a server in Virginia now."],
+  ['scooter',  'SCOOTER BRO',    "Apex commuter. One earbud. Zero mirrors.", "Sees nothing. Fears nothing. Yields nothing."],
+  ['robot',    'DELIVERY ROBOT', "Six wheels. One job.", "Zero confirmed deliveries since launch. Series C."],
+  ['drone',    'DELIVERY DRONE', "The cloud, but with a claw.", "Terms of service apply to you, not to it."],
+  ['printer',  'PRINTER',        "Waited twenty years in a cubicle.", "Now it has projectiles, a grudge, and full toner."],
+  ['possum',   'RANDALL',        "Consultant. Lives in a rent-controlled wall.", "Not playing dead — that's a lifestyle brand."],
+  ['control',  'ANIMAL CONTROL', "A net. A clipboard. Jurisdiction issues.", "Files you under 'known entity, repeat customer'."],
+  ['roller',   'GRADY',          "Steamroller. Polite. Uses the blinker.", "Cannot jump. Will not be discussing it."],
+  ['binboss',  'B.I.N. 9000',    "Optimized garbage into a subscription.", "Current role: planter box. Open to work."],
+  ['gary',     'GARY (CEO)',     "Seagull. Two health bars.", "Zero self-awareness. Pivoted mid-death. Iconic."],
+  ['orca',     'ORCA',           "Regional celebrity.", "Appears once per news cycle. Owes nobody anything."],
+];
 
 // per-stage config
 const STAGES = [
@@ -438,7 +511,9 @@ const STAGES = [
   { id: 5, name: 'THE INTERVIEW', sub: 'Please Hold. Forever.', map: mapOffice, song: 'stealth',
     intro: 's5intro', outro: 's5outro', signs: SIGNS[5], office: true },
   { id: 6, name: 'HOSTILE TAKEOVER', sub: 'vs. GARY, Seagull CEO', map: mapStage6, song: 'boss',
-    intro: 's6intro', outro: 's6outro', signs: {}, boss: 'gary' },
+    intro: 's6intro', outro: 's6outro', signs: {}, boss: 'gary', final: true },
+  { id: 7, name: 'FERRY TALE', sub: 'Epilogue: Now Boarding', map: mapFerry, song: 'dawn',
+    intro: 's7intro', signs: SIGNS[7], gag: 'orca', epilogue: true, dawn: true },
 ];
 
 function gradeFor(score, deaths) {
@@ -524,6 +599,7 @@ function parseLevel(lines, stage) {
         case 'X': ents.push({ type: 'item', item: 'jetpack', x: px, y: py }); break;
         case '&': ents.push({ type: 'item', item: 'mecha', x: px, y: py }); break;
         case '^': ents.push({ type: 'item', item: 'coffee', x: px, y: py }); break;
+        case 'l': ents.push({ type: 'item', item: 'balloon', x: px, y: py }); break;
         case '@': ents.push({ type: 'item', item: 'wizhat', x: px, y: py }); break;
         case ':': ents.push({ type: 'coin', x: px, y: py - 4 }); break;
         case 'M': ents.push({ type: 'cart', x: px, y: py }); break;

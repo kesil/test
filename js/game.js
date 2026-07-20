@@ -11,11 +11,21 @@ const G = {
   score: 0, deaths: 0, timeF: 0, totalScore: 0, totalDeaths: 0, totalCoins: 0,
   narrFired: {}, toast: null, toastQ: [], dialog: null, gag: null, chaser: null, boss: null,
   checkpoint: null, gsign: 1, hitstop: 0, fade: 0,
-  springs: {}, flagsLit: {}, respawnBoxes: [], outroT: 0, discoFound: false,
+  springs: {}, flagsLit: {}, respawnBoxes: [], respawnItems: [], outroT: 0, discoFound: false,
   stats: { kills: 0, coins: 0, wakes: 0, taunts: 0 }, combo: { n: 0, t: 0, best: 0 },
   roller: null, captcha: null,
 };
 window.JIM = G;
+
+// ---------- trashopedia ----------
+let pediaSet = new Set(JSON.parse(localStorage.getItem('jim_pedia') || '[]'));
+function markMet(id) {
+  if (pediaSet.has(id)) return;
+  pediaSet.add(id);
+  localStorage.setItem('jim_pedia', JSON.stringify([...pediaSet]));
+  const entry = PEDIA.find(p => p[0] === id);
+  if (entry) toast('TRASHOPEDIA: ' + entry[1] + ' logged. (view with C on the title screen)', 200);
+}
 
 // ---------- trophies ----------
 let achSet = new Set(JSON.parse(localStorage.getItem('jim_ach') || '[]'));
@@ -231,6 +241,14 @@ function makePlayer(x, y) {
 function hurtPlayer(dmg, fromX) {
   const p = G.p;
   if (GOD || p.inv > 0 || p.star > 0 || p.dead || p.ghostT > 0 || G.state !== 'play') return;
+  if (p.balloon) {
+    p.balloon = false;
+    p.inv = 70;
+    toast('POP. The balloon returns to its people.');
+    addFX('v6', 'fx_hitspark', p.x, p.y - 40);
+    Audio2.sfx('boom'); shake(3);
+    return;
+  }
   if (p.chonk > 0) dmg = Math.max(1, dmg - 1);
   p.hearts -= dmg;
   p.inv = 80;
@@ -319,7 +337,11 @@ function updatePlayer(dt) {
 
   // ---- swim ----
   if (inWater) {
-    if (!p.swimming) { p.swimming = true; addFX('v6', 'fx_splash', p.x, p.y); Audio2.sfx('splash'); narrOnce('swim'); }
+    if (!p.swimming) {
+      p.swimming = true;
+      if (p.balloon) { p.balloon = false; toast('Balloons and water: enemies forever.'); }
+      addFX('v6', 'fx_splash', p.x, p.y); Audio2.sfx('splash'); narrOnce('swim');
+    }
     p.vx = clamp(p.vx + (Input.r - Input.l) * 0.18, -1.9, 1.9);
     p.vx *= 0.96;
     p.vy += 0.05;
@@ -430,13 +452,27 @@ function updatePlayer(dt) {
 
   // ---- gravity ----
   let maxFall = 6.2;
-  if (p.jetpack >= 0 && p.fuel > 0 && Input.jump) {
+  if (p.balloon) {
+    p.balloonT--;
+    if (p.balloonT <= 0) {
+      p.balloon = false;
+      toast('The balloon expired. Like all subscriptions.');
+      addFX('v6', 'fx_hitspark', p.x, p.y - 40);
+      Audio2.sfx('throw');
+    }
+  }
+  if (p.balloon && !p.onGround) {
+    const target = Input.jump ? -1.35 : 0.95;
+    p.vy += (target - p.vy) * 0.08;
+    if (Input.l) p.vx = Math.max(p.vx - 0.12, -1.7);
+    else if (Input.r) p.vx = Math.min(p.vx + 0.12, 1.7);
+  } else if (p.jetpack >= 0 && p.fuel > 0 && Input.jump) {
     p.vy -= 0.30 * gs; p.fuel -= 0.35;
     if (p.vy * gs < -3.2) p.vy = -3.2 * gs;
     if (Math.random() < 0.5) addFX('v5', 'fx_dust', p.x - p.dir * 6, p.y + 2);
   }
   if (p.umbrella && Input.jump && p.vy * gs > 0 && !p.pouncing) maxFall = 1.05;
-  p.vy += 0.31 * gs;
+  if (!(p.balloon && !p.onGround)) p.vy += 0.31 * gs;
   if (p.vy * gs > maxFall) p.vy = maxFall * gs;
 
   // ---- attacks ----
@@ -532,6 +568,7 @@ function updatePlayer(dt) {
   else if (p.rollT > 0) anim = 'roll';
   else if (p.tauntT > 0) anim = 'taunt';
   else if (sliding) { sheet = 'v6'; anim = 'walljump'; }
+  else if (p.balloon && !p.onGround) { sheet = 'v6'; anim = 'balloon'; }
   else if (p.jetpack >= 0 && p.fuel > 0 && !p.onGround) { sheet = 'v6'; anim = 'jetpack'; }
   else if (!p.onGround && p.umbrella && Input.jump && p.vy * G.gsign > 0) { sheet = 'v6'; anim = 'umbrella'; }
   else if (!p.onGround) anim = p.vy * G.gsign < 0 ? 'jump' : 'fall';
@@ -941,6 +978,7 @@ function updateEnemies(dt) {
           e.used = true;
           if (G.cfg.gag === 'popup') startPopup();
           else if (G.cfg.gag === 'bsod') startBSOD();
+          else if (G.cfg.gag === 'orca') startOrca();
         }
         break;
       }
@@ -960,6 +998,7 @@ function updateEnemies(dt) {
         if (!e.used && Math.abs(p.x - e.x) < 20) {
           e.used = true;
           G.roller = { x: p.x - 380, v: 0, stopX: 230 * TILE };
+          markMet('roller');
           narrOnce('steamroller');
           Audio2.sfx('roar'); shake(6);
         }
@@ -983,6 +1022,10 @@ function updateEnemies(dt) {
         break;
       }
     }
+    // trashopedia proximity logging
+    if (G.timeF % 19 === 0 && Math.abs(e.x - p.x) < 140 && Math.abs(e.y - p.y) < 120) {
+      if (['rat', 'gull', 'sgull', 'crow', 'roomba', 'scooter', 'robot', 'drone', 'printer', 'possum'].includes(e.type)) markMet(e.type);
+    }
     // contact damage & stomps
     if (KILLABLE.includes(e.type) && !e.dead && e.type !== 'crow' && !(e.type === 'sgull' && e.mode === 'sleep')) {
       const eb = entBox(e), pb = bodyBox(p, G.gsign);
@@ -1000,6 +1043,17 @@ function updateEnemies(dt) {
       }
     }
   }
+  for (const ri of G.respawnItems) {
+    if (ri.t > 0) {
+      ri.t--;
+      if (ri.t === 0) {
+        G.ents.push({ type: 'item', item: ri.item, x: ri.x, y: ri.y, bob: 0 });
+        addFX('v5', 'fx_sparkle', ri.x, ri.y - 10);
+        ri.done = true;
+      }
+    }
+  }
+  G.respawnItems = G.respawnItems.filter(ri => !ri.done);
   for (const rb of G.respawnBoxes) {
     if (rb.t > 0) {
       rb.t--;
@@ -1045,6 +1099,12 @@ function pickupItem(e) {
     case 'umbrella':
       p.umbrella = true; addScore(50, e.x, e.y - 20);
       narrOnce('umbrella');
+      break;
+    case 'balloon':
+      p.balloon = true; p.balloonT = 1800;
+      addScore(50, e.x, e.y - 20);
+      toast('BALLOON GET. Absorbs exactly one (1) consequence.');
+      if (G.cfg.epilogue) G.respawnItems.push({ item: 'balloon', x: e.x, y: e.y, t: 480 });
       break;
     case 'jetpack':
       p.jetpack = 1; p.fuel = 100; addScore(100, e.x, e.y - 20);
@@ -1266,7 +1326,15 @@ function updateCaptcha() {
   }
 }
 
+function startOrca() {
+  G.orca = { t: 0 };
+  markMet('orca');
+  toast('ORCA SIGHTED. Everyone, or no one, is working today.');
+  Audio2.sfx('splash');
+}
+
 function startChase() {
+  markMet('control');
   G.chaser = { x: G.p.x - 300, startX: G.p.x - 300, v: 1.55 * EF(), stopX: (G.cfg.id === 2 ? 194 * TILE : 1e9) };
   narrOnce('chase');
   Audio2.sfx('roar');
@@ -1295,6 +1363,7 @@ function updateChaser() {
 
 // ---------- bosses ----------
 function spawnBoss(kind) {
+  markMet(kind === 'bin' ? 'binboss' : 'gary');
   if (kind === 'bin') {
     G.boss = { kind: 'bin', type: 'boss_bin', x: 34 * TILE, y: 14 * TILE, hp: 9, maxHp: 9, mode: 'intro', t: 0, phase: 1, frame: 0, animT: 0, vx: 0, vy: 0, homeY: 14 * TILE };
   } else {

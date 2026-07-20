@@ -42,6 +42,7 @@ function startStage(idx, skipIntro) {
   G.toast = null; G.toastQ = []; G.gag = null; G.chaser = null; G.boss = null; G.bossDead = false;
   G.gsign = 1; G.flagsLit = {}; G.springs = {}; G.respawnBoxes = [];
   G.discoFound = false; G.roller = null; G.captcha = null; G.hitstop = 0;
+  G.respawnItems = []; G.orca = null;
   G.stats = { kills: 0, coins: 0, wakes: 0, taunts: 0 };
   G.combo = { n: 0, t: 0, best: 0 };
   G.irisT = 50;
@@ -87,6 +88,7 @@ function finishStage() {
   if (id === 4 && G.deaths === 0) award('nocrash');
   if (id === 5 && G.stats.wakes <= 1) award('ninja');
   if (id === 6 && G.plusMode) award('plus');
+  if (id === 7) award('commuter');
   if (G.rush) G.rush.time += G.timeF;
   G.state = 'results';
   G.resultsT = 0;
@@ -114,7 +116,9 @@ function afterResults() {
     return;
   }
   const go = () => {
-    if (G.stageIdx + 1 < STAGES.length) startStage(G.stageIdx + 1);
+    if (cfg.final) startVictory();
+    else if (cfg.epilogue) { G.state = 'title'; Audio2.stop(); }
+    else if (G.stageIdx + 1 < STAGES.length) startStage(G.stageIdx + 1);
     else startVictory();
   };
   if (cfg.outro) startStory(cfg.outro, go);
@@ -149,6 +153,13 @@ function update(dt) {
     case 'trophies':
       if (Input.startP || Input.jumpP || Input.tauntP || Input.atkP) { G.state = 'title'; Audio2.sfx('ui'); }
       break;
+    case 'pedia': {
+      if (Input.l && !G._pHeld) { G.pediaSel = (G.pediaSel + PEDIA.length - 1) % PEDIA.length; G._pHeld = true; Audio2.sfx('ui'); }
+      else if (Input.r && !G._pHeld) { G.pediaSel = (G.pediaSel + 1) % PEDIA.length; G._pHeld = true; Audio2.sfx('ui'); }
+      else if (!Input.l && !Input.r) G._pHeld = false;
+      if (Input.startP || Input.jumpP || Input.dashP) { G.state = 'title'; Audio2.sfx('ui'); }
+      break;
+    }
     case 'rushdone':
       G.resultsT++;
       if (G.resultsT > 60 && (Input.jumpP || Input.startP)) {
@@ -172,7 +183,8 @@ function updateTitle(dt) {
   G.titleAnim.update('v5a', dt);
   G.titleT = (G.titleT || 0) + 1;
   if (G.titleT % 420 === 400) G.titleAnim.set(G.titleAnim.name === 'idle' ? 'taunt' : 'idle');
-  const maxSel = Math.min(G.unlocked, STAGES.length) - 1;
+  const maxStory = Math.min(G.unlocked, 6);
+  const maxSel = (achSet.has('goty') ? 7 : maxStory) - 1;
   const modes = titleModes();
   G.titleMode = clamp(G.titleMode || 0, 0, modes.length - 1);
   if (Input.l && !G._selHeld) { G.titleSel = Math.max(0, G.titleSel - 1); G._selHeld = true; Audio2.sfx('ui'); }
@@ -183,6 +195,7 @@ function updateTitle(dt) {
     G._modeHeld = true; Audio2.sfx('ui');
   } else if (!Input.u && !Input.d) G._modeHeld = false;
   if (Input.tauntP) { G.state = 'trophies'; Audio2.sfx('ui'); return; }
+  if (Input.dashP) { G.state = 'pedia'; G.pediaSel = 0; Audio2.sfx('ui'); return; }
   if (Input.startP || Input.jumpP) {
     Audio2.init(); Audio2.sfx('coin');
     G.rush = null; G.plusMode = false;
@@ -281,6 +294,7 @@ function render(dt) {
     case 'bsod': drawWorld(); drawBSOD(); break;
     case 'results': drawWorld(); drawResults(); break;
     case 'trophies': drawTrophies(); break;
+    case 'pedia': drawPedia(); break;
     case 'rushdone': drawRushDone(); break;
     case 'victory': drawVictory(); break;
   }
@@ -313,6 +327,7 @@ function drawIris() {
 function drawBG() {
   const cfg = G.cfg || {};
   if (cfg.office) { drawOfficeBG(); return; }
+  if (cfg.dawn) { drawDawnBG(); return; }
   const id = cfg.id || 1;
   const grad = cx.createLinearGradient(0, 0, 0, VH);
   if (id === 3) { grad.addColorStop(0, '#120e1c'); grad.addColorStop(1, '#241a30'); }
@@ -341,6 +356,53 @@ function drawBG() {
   const coff = (G.cam.x * 0.15 + G.timeF * 0.1) % (VW + 80);
   drawTile(cx, 'cloud_l', VW - coff, 34); drawTile(cx, 'cloud_r', VW - coff + 16, 34);
   drawTile(cx, 'cloud_l', VW - coff - 200, 60); drawTile(cx, 'cloud_r', VW - coff - 184, 60);
+}
+
+function drawDawnBG() {
+  const grad = cx.createLinearGradient(0, 0, 0, VH);
+  grad.addColorStop(0, '#2a2246'); grad.addColorStop(0.55, '#7a4460'); grad.addColorStop(1, '#c88a6a');
+  cx.fillStyle = grad; cx.fillRect(0, 0, VW, VH);
+  // rising sun
+  cx.fillStyle = '#ffd9a0';
+  cx.beginPath(); cx.arc(VW - 110 - G.cam.x * 0.03, 96, 22, 0, 7); cx.fill();
+  cx.fillStyle = 'rgba(255,217,160,.25)';
+  cx.beginPath(); cx.arc(VW - 110 - G.cam.x * 0.03, 96, 34, 0, 7); cx.fill();
+  // distant skyline behind the water
+  const off = Math.floor(G.cam.x * 0.2) % TILE;
+  for (let i = -1; i <= VW / TILE + 1; i++) {
+    const wx = Math.floor((G.cam.x * 0.2) / TILE) + i;
+    const r = (Math.abs(wx * 7919) % 10);
+    drawTile(cx, r === 3 ? 'space_needle' : (r % 2 ? 'skyline_a' : 'skyline_b'), i * TILE - off, 128);
+  }
+  // sea shimmer
+  for (let i = 0; i < 40; i++) {
+    const y = 150 + (i * 7919 % 100);
+    const x = ((i * 3571 + G.timeF * (0.3 + i % 3 * 0.2)) % (VW + 20)) - 10;
+    cx.fillStyle = 'rgba(255,220,180,.18)';
+    cx.fillRect(Math.floor(x), y, 6, 1);
+  }
+  // ORCA breach
+  if (G.orca) {
+    G.orca.t++;
+    const t = G.orca.t / 150;
+    if (t > 1.6) G.orca = null;
+    else {
+      const ox = VW * 0.2 + t * 180, oy = 200 - Math.sin(Math.min(t, 1) * Math.PI) * 90;
+      cx.save();
+      cx.translate(ox, oy);
+      cx.rotate((t - 0.5) * 1.4);
+      cx.fillStyle = '#1c1c2c';
+      cx.beginPath(); cx.ellipse(0, 0, 30, 11, 0, 0, 7); cx.fill();
+      cx.fillStyle = '#f0ede8';
+      cx.beginPath(); cx.ellipse(6, 5, 12, 4, 0, 0, 7); cx.fill();
+      cx.beginPath(); cx.ellipse(16, -3, 3, 2, 0, 0, 7); cx.fill();
+      cx.fillStyle = '#1c1c2c';
+      cx.beginPath(); cx.moveTo(-4, -8); cx.lineTo(2, -22); cx.lineTo(6, -8); cx.fill();
+      cx.beginPath(); cx.moveTo(-28, -4); cx.lineTo(-40, -12); cx.lineTo(-36, 2); cx.fill();
+      cx.restore();
+      if (G.orca.t === 140) addFX('v6', 'fx_splash', G.cam.x + ox, G.cam.y + 240);
+    }
+  }
 }
 
 function drawOfficeBG() {
@@ -570,6 +632,14 @@ function drawItem(e) {
   } else if (e.item === 'wizhat') {
     drawSprite(cx, 'wizhat', e.x, bobY);
     if (Math.floor(G.timeF / 8) % 2) drawSprite(cx, 'spell_1', e.x + 10, bobY - 10);
+  } else if (e.item === 'balloon') {
+    const cols = ['#c85a5a', '#5ac86a', '#5a8ac8'];
+    for (let i = 0; i < 3; i++) {
+      cx.fillStyle = cols[i];
+      cx.beginPath(); cx.ellipse(e.x - 6 + i * 6, bobY - 14 - (i % 2) * 4, 4, 5, 0, 0, 7); cx.fill();
+      cx.strokeStyle = 'rgba(255,255,255,.3)';
+      cx.beginPath(); cx.moveTo(e.x - 6 + i * 6, bobY - 9 - (i % 2) * 4); cx.lineTo(e.x, bobY); cx.stroke();
+    }
   } else if (e.item === 'umbrella') {
     cx.fillStyle = '#b8434e';
     cx.beginPath(); cx.arc(e.x, bobY - 8, 8, Math.PI, 0); cx.fill();
@@ -840,6 +910,7 @@ function drawHUD() {
   if (p.star > 0) { txtShadow(cx, 'STAR ' + Math.ceil(p.star / 60), VW - 8, py, '#ffe96b', 8, 'right'); py += 10; }
   if (p.coffeeT > 0) { txtShadow(cx, 'ESPRESSO ' + Math.ceil(p.coffeeT / 60), VW - 8, py, '#d8b48a', 8, 'right'); py += 10; }
   if (p.wizardT > 0) { txtShadow(cx, 'WIZARD ' + Math.ceil(p.wizardT / 60), VW - 8, py, '#c89be8', 8, 'right'); py += 10; }
+  if (p.balloon) { txtShadow(cx, 'BALLOON ' + Math.ceil(p.balloonT / 60), VW - 8, py, '#e89b9b', 8, 'right'); py += 10; }
   if (p.jetpack >= 0) {
     cx.fillStyle = 'rgba(0,0,0,.5)'; cx.fillRect(VW - 68, py, 60, 6);
     cx.fillStyle = '#9be89b'; cx.fillRect(VW - 67, py + 1, Math.max(0, p.fuel) * 0.58, 4);
@@ -891,14 +962,17 @@ function drawTitle() {
   drawActor(cx, 'v5', 'v5a', G.titleAnim.name, G.titleAnim.frame, VW / 2 + 150, 226, true);
   const blink = Math.floor(G.uiT / 30) % 2 === 0;
   if (blink) txtShadow(cx, 'PRESS JUMP / TAP TO START', VW / 2, 206, '#ffe9b0', 8, 'center');
-  let sx = VW / 2 - (Math.min(G.unlocked, STAGES.length) * 26) / 2;
-  for (let i = 0; i < Math.min(G.unlocked, STAGES.length); i++) {
+  const nChips = achSet.has('goty') ? 7 : Math.min(G.unlocked, 6);
+  let sx = VW / 2 - (nChips * 26) / 2;
+  for (let i = 0; i < nChips; i++) {
     const sel = i === G.titleSel;
-    cx.fillStyle = sel ? '#ffd76b' : 'rgba(255,255,255,.18)';
+    const ferry = i === 6;
+    cx.fillStyle = sel ? '#ffd76b' : ferry ? 'rgba(150,232,232,.25)' : 'rgba(255,255,255,.18)';
     cx.fillRect(sx + i * 26, 226, 20, 14);
-    txt(cx, String(i + 1), sx + i * 26 + 10, 229, sel ? '#241a30' : '#cfc8e0', 8, 'center');
+    txt(cx, ferry ? 'F' : String(i + 1), sx + i * 26 + 10, 229, sel ? '#241a30' : '#cfc8e0', 8, 'center');
   }
   txtShadow(cx, 'TROPHIES: ' + achSet.size + '/' + Object.keys(ACH).length + '  (T: view)', 8, 6, '#9be89b', 8);
+  txtShadow(cx, 'TRASHOPEDIA: ' + pediaSet.size + '/' + PEDIA.length + '  (C: view)', 8, 16, '#96e8e8', 8);
   const modes = titleModes();
   if (modes.length > 1) {
     const mstr = modes.map((m, i) => (i === G.titleMode ? '[' + m + ']' : ' ' + m + ' ')).join(' ');
@@ -1016,6 +1090,8 @@ function drawVictory() {
   txtShadow(cx, 'KING OF TRASH', VW / 2, 12, '#ffd76b', 16, 'center');
   txtShadow(cx, 'TOTAL TRASH: ' + G.totalScore + '   RELOCATIONS: ' + G.totalDeaths + '   COIN: $0.00', VW / 2, 34, '#fff', 8, 'center');
   txtShadow(cx, 'TROPHIES: ' + achSet.size + '/' + Object.keys(ACH).length + '   FINAL GRADE: ' + gradeFor(G.totalScore / 6, G.totalDeaths), VW / 2, 46, '#9be89b', 8, 'center');
+  if (Math.floor(G.outroT / 40) % 2 === 0)
+    txtShadow(cx, 'EPILOGUE UNLOCKED: FERRY TALE — press F on the stage select', VW / 2, VH - 44, '#96e8e8', 8, 'center');
   const cy = VH - ((G.outroT * 0.4) % (CREDITS.length * 14 + VH));
   cx.save();
   cx.beginPath(); cx.rect(0, 60, VW, VH - 104) ; cx.clip();
@@ -1045,6 +1121,54 @@ function drawTrophies() {
     txtShadow(cx, has ? ACH[k].d : 'keep being a raccoon', x + 24, y + 13, has ? '#c8c2da' : '#555066', 8);
   });
   txtShadow(cx, 'JUMP: back', VW / 2, VH - 12, '#8f88a8', 8, 'center');
+}
+
+function drawPedia() {
+  drawTitleBG();
+  cx.fillStyle = 'rgba(8,6,14,.9)'; cx.fillRect(0, 0, VW, VH);
+  const i = G.pediaSel || 0;
+  const [id, name, l1, l2] = PEDIA[i];
+  const met = pediaSet.has(id);
+  txtShadow(cx, 'TRASHOPEDIA  ' + pediaSet.size + '/' + PEDIA.length, VW / 2, 10, '#96e8e8', 16, 'center');
+  txtShadow(cx, (i + 1) + ' / ' + PEDIA.length, VW / 2, 32, '#6b6484', 8, 'center');
+  cx.fillStyle = '#100c1c'; cx.fillRect(110, 48, VW - 220, 160);
+  cx.strokeStyle = 'rgba(150,232,232,.35)'; cx.strokeRect(110.5, 48.5, VW - 221, 159);
+  const px = VW / 2, py = 140;
+  if (met) {
+    switch (id) {
+      case 'rat': drawActor(cx, 'v6', 'v6a', 'rat', 0, px, py); break;
+      case 'gull': drawActor(cx, 'v6', 'v6a', 'gull', 0, px, py); break;
+      case 'sgull': drawActor(cx, 'v6', 'v6a', 'gull', 0, px, py); drawActor(cx, 'v6', 'v6a', 'bubbles', 3, px + 16, py - 16); break;
+      case 'crow': drawSprite(cx, 'crow_perch', px, py); break;
+      case 'roomba': drawSprite(cx, 'roomba_0', px, py); break;
+      case 'scooter': drawSprite(cx, 'scooter_0', px, py); break;
+      case 'robot': drawSprite(cx, 'robot_0', px, py); break;
+      case 'drone': drawSprite(cx, 'drone_0', px, py); break;
+      case 'printer': drawSprite(cx, 'printer_0', px, py); break;
+      case 'possum': drawActor(cx, 'v6', 'v6a', 'possum', 0, px, py); break;
+      case 'control': drawActor(cx, 'v6', 'v6a', 'control', 0, px, py + 20); break;
+      case 'roller': drawSprite(cx, 'steamroller_0', px, py, true, 0.9); break;
+      case 'binboss': drawSprite(cx, 'binboss_idle_0', px, py, false, 0.9); break;
+      case 'gary': drawSprite(cx, 'gary_fly_0', px, py, false, 0.6); break;
+      case 'orca': {
+        cx.fillStyle = '#1c1c2c';
+        cx.beginPath(); cx.ellipse(px, py - 20, 30, 11, 0, 0, 7); cx.fill();
+        cx.fillStyle = '#f0ede8';
+        cx.beginPath(); cx.ellipse(px + 6, py - 15, 12, 4, 0, 0, 7); cx.fill();
+        cx.fillStyle = '#1c1c2c';
+        cx.beginPath(); cx.moveTo(px - 4, py - 28); cx.lineTo(px + 2, py - 42); cx.lineTo(px + 6, py - 28); cx.fill();
+        break;
+      }
+    }
+    txtShadow(cx, name, VW / 2, 152, '#ffe9b0', 16, 'center');
+    txtShadow(cx, l1, VW / 2, 174, '#c8c2da', 8, 'center');
+    txtShadow(cx, l2, VW / 2, 186, '#c8c2da', 8, 'center');
+  } else {
+    txtShadow(cx, '???', VW / 2, 120, '#555066', 32, 'center');
+    txtShadow(cx, 'not yet encountered', VW / 2, 168, '#6b6484', 8, 'center');
+    txtShadow(cx, 'go outside. meet somebody.', VW / 2, 180, '#555066', 8, 'center');
+  }
+  txtShadow(cx, '\u25C0 \u25B6 browse · JUMP: back', VW / 2, VH - 14, '#8f88a8', 8, 'center');
 }
 
 function drawRushDone() {
